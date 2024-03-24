@@ -1,50 +1,61 @@
-# from .session_file import session
-# from lib.model_modules.models import Category, Recipe, Ingredient
-from model_modules import Category, Recipe, Ingredient, Base, session, engine
+from model_modules import Category, Recipe, Ingredient, Instruction, Base, session, engine
+
 Base.metadata.create_all(bind=engine)
+
 def seed_database():
     # Seed categories
-    breakfast = Category(name="Breakfast")
-    lunch = Category(name="Lunch")
-    dinner = Category(name="Dinner")
-    dessert = Category(name="Dessert")
-    snack = Category(name="Snack")
-
-    session.add_all([breakfast, lunch, dinner, dessert])
+    categories = ["Breakfast", "Lunch", "Dinner", "Dessert", "Snack"]
+    for category_name in categories:
+        category = Category(name=category_name)
+        session.add(category)
     session.commit()
 
     # Seed recipes
-    pancakes = Recipe(name="Pancakes", instructions="Instructions for making pancakes", category=breakfast)
-    spaghetti = Recipe(name="Spaghetti", instructions="Instructions for making spaghetti", category=dinner)
+    recipes_data = {
+        "Pancakes": {
+            "category": "Breakfast",
+            "instructions": [
+                "Mix flour, eggs, milk, sugar, baking powder, and salt in a bowl.",
+                "Heat a lightly oiled griddle or frying pan over medium-high heat.",
+                "Pour or scoop the batter onto the griddle, using approximately 1/4 cup for each pancake.",
+                "Brown on both sides and serve hot."
+            ],
+            "ingredients": ["Flour", "Eggs", "Milk", "Butter", "Sugar", "Baking powder", "Salt"]
+        },
+        "Spaghetti": {
+            "category": "Dinner",
+            "instructions": [
+                "Bring a large pot of lightly salted water to a boil.",
+                "Cook spaghetti in the boiling water, stirring occasionally until cooked through but firm to the bite, about 12 minutes; drain.",
+                "Heat olive oil in a large skillet over medium heat; cook and stir garlic until lightly browned, about 1 minute.",
+                "Add ground beef, onion, salt, and black pepper; cook and stir until browned and crumbly, 5 to 7 minutes.",
+                "Pour diced tomatoes and tomato sauce into the skillet; season with sugar, Italian seasoning, basil, salt, and pepper.",
+                "Simmer sauce for 10 minutes; add spaghetti and cook, stirring occasionally, until heated through and flavors are blended, about 10 minutes more."
+            ],
+            "ingredients": ["Spaghetti pasta", "Tomato sauce", "Ground beef", "Onion", "Garlic", "Olive oil", "Salt", "Pepper"]
+        }
+    }
 
-    session.add_all([pancakes, spaghetti])
-    session.commit()
+    for recipe_name, recipe_data in recipes_data.items():
+        category = session.query(Category).filter_by(name=recipe_data["category"]).first()
+        if category:
+            recipe = Recipe(name=recipe_name, category=category)
+            session.add(recipe)
+            session.commit()
 
-    # Seed ingredients
-    pancakes_ingredients = [
-        Ingredient(name="Flour", recipe=pancakes),
-        Ingredient(name="Eggs", recipe=pancakes),
-        Ingredient(name="Milk", recipe=pancakes),
-        Ingredient(name="Butter", recipe=pancakes),
-        Ingredient(name="Sugar", recipe=pancakes),
-        Ingredient(name="Baking powder", recipe=pancakes),
-        Ingredient(name="Salt", recipe=pancakes)
-    ]
+            # Seed instructions
+            instructions = recipe_data["instructions"]
+            for idx, instruction_desc in enumerate(instructions, start=1):
+                instruction = Instruction(step=idx, description=instruction_desc, recipe=recipe)
+                session.add(instruction)
+            session.commit()
 
-    spaghetti_ingredients = [
-        Ingredient(name="Spaghetti pasta", recipe=spaghetti),
-        Ingredient(name="Tomato sauce", recipe=spaghetti),
-        Ingredient(name="Ground beef", recipe=spaghetti),
-        Ingredient(name="Onion", recipe=spaghetti),
-        Ingredient(name="Garlic", recipe=spaghetti),
-        Ingredient(name="Olive oil", recipe=spaghetti),
-        Ingredient(name="Salt", recipe=spaghetti),
-        Ingredient(name="Pepper", recipe=spaghetti)
-    ]
-
-    session.add_all(pancakes_ingredients)
-    session.add_all(spaghetti_ingredients)
-    session.commit()
+            # Seed ingredients
+            ingredients = recipe_data["ingredients"]
+            for ingredient_name in ingredients:
+                ingredient = Ingredient(name=ingredient_name, recipe=recipe)
+                session.add(ingredient)
+            session.commit()
 
 if __name__ == "__main__":
     seed_database()
